@@ -4,45 +4,68 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Estimator</title>
-<meta name="theme-color" content="#1e293b">
+<meta name="theme-color" content="#243B55">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-title" content="Estimator">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="apple-touch-icon.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Source+Sans+3:wght@400;600;700&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg: #f3f4f6;
-    --card: #ffffff;
-    --line: #d8dce2;
-    --text: #1c2230;
-    --muted: #6b7280;
-    --accent: #1e293b;
-    --danger: #b42318;
+    --navy: #243B55;
+    --blue: #0083C3;
+    --blue-deep: #0072AB;
+    --sky: #7FB3D5;
+    --red: #ED263A;
+    --mist: #F2F4F7;
+    --white: #FFFFFF;
+    --ink: #1B2A3D;
+    --muted: #5B6B82;
+    --faint: #98A3B3;
+    --line: #D5DBE3;
+    --hair: #EDF0F4;
     color-scheme: light;
   }
   * { box-sizing: border-box; }
   html { -webkit-text-size-adjust: 100%; }
   body {
     margin: 0;
-    background: var(--bg);
-    color: var(--text);
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--mist);
+    color: var(--ink);
+    font-family: "Source Sans 3", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     -webkit-tap-highlight-color: transparent;
   }
+
+  .bar {
+    background: var(--navy);
+    color: var(--white);
+    padding: calc(14px + env(safe-area-inset-top)) 16px 14px;
+  }
+  .bar .inner {
+    max-width: 900px; margin: 0 auto;
+    display: flex; align-items: center; justify-content: space-between;
+  }
+  h1 { font-size: 20px; font-weight: 600; margin: 0; letter-spacing: .01em; }
+  .clear {
+    border: 0; background: transparent; cursor: pointer;
+    color: var(--sky); font-size: 15px; font-weight: 600; padding: 8px 0 8px 12px;
+  }
+  .clear:hover, .clear:focus-visible { color: var(--white); outline: none; }
+
   .wrap {
     max-width: 900px;
     margin: 0 auto;
-    padding: 16px 16px calc(24px + env(safe-area-inset-bottom));
+    padding: 16px 16px calc(28px + env(safe-area-inset-bottom));
   }
-  .top { display: flex; align-items: center; justify-content: space-between; margin: 4px 0 14px; }
-  h1 { font-size: 20px; margin: 0; }
-  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px; }
+  .card { background: var(--white); border: 1px solid var(--line); border-radius: 12px; padding: 12px; }
 
   /* 16px minimum keeps iOS Safari from zooming into fields on focus */
-  input, select, button { font: inherit; font-size: 16px; color: var(--text); }
+  input, select, button { font: inherit; font-size: 16px; color: var(--ink); }
   input, select {
     width: 100%;
     min-width: 0;
@@ -50,14 +73,20 @@
     padding: 0 12px;
     border: 1px solid var(--line);
     border-radius: 8px;
-    background: #fff;
+    background: var(--white);
+    transition: border-color .12s, box-shadow .12s;
   }
-  input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
+  input::placeholder { color: var(--faint); }
+  input:focus, select:focus {
+    outline: none;
+    border-color: var(--blue);
+    box-shadow: 0 0 0 3px rgba(0,131,195,.18);
+  }
   select {
     appearance: none;
     -webkit-appearance: none;
     padding-right: 32px;
-    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%236b7280' stroke-width='1.8'/%3E%3C/svg%3E");
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23243B55' stroke-width='1.8'/%3E%3C/svg%3E");
     background-repeat: no-repeat;
     background-position: right 12px center;
   }
@@ -70,7 +99,7 @@
   }
   .head { font-size: 13px; font-weight: 600; color: var(--muted); padding: 0 12px 8px; }
   .row { padding: 10px 0; }
-  #items .row + .row { border-top: 1px solid var(--line); }
+  #items .row + .row { border-top: 1px solid var(--hair); }
   .field { min-width: 0; }
   .field label { display: none; }
 
@@ -78,35 +107,33 @@
     width: 44px; height: 44px;
     border: 0; border-radius: 8px;
     background: transparent;
-    color: var(--muted);
+    color: var(--faint);
     font-size: 24px; line-height: 1;
     cursor: pointer;
   }
-  .remove:hover, .remove:focus-visible { background: #f1f3f5; color: var(--danger); outline: none; }
+  .remove:hover, .remove:focus-visible { background: rgba(237,38,58,.08); color: var(--red); outline: none; }
 
-  .add, .clear { cursor: pointer; }
   .add {
     width: 100%; margin-top: 10px; height: 44px;
-    border: 1px dashed var(--line); border-radius: 8px;
-    background: #fff; color: var(--accent); font-weight: 600;
+    border: 0; border-radius: 8px; cursor: pointer;
+    background: var(--blue); color: var(--white); font-weight: 600;
   }
-  .add:hover, .add:focus-visible { border-color: var(--accent); outline: none; }
-  .clear {
-    border: 0; background: transparent; color: var(--muted);
-    padding: 8px 4px; font-size: 15px;
-  }
-  .clear:hover, .clear:focus-visible { color: var(--danger); outline: none; }
+  .add:hover { background: var(--blue-deep); }
+  .add:focus-visible { outline: 2px solid var(--navy); outline-offset: 2px; }
 
   .total {
     position: sticky;
-    bottom: 0;
+    bottom: calc(12px + env(safe-area-inset-bottom));
     margin-top: 14px;
+    background: var(--navy);
+    color: var(--white);
+    border-radius: 12px;
+    padding: 14px 16px;
     display: flex; justify-content: space-between; align-items: baseline;
-    padding-bottom: calc(12px + env(safe-area-inset-bottom));
-    box-shadow: 0 -6px 16px -12px rgba(0,0,0,.35);
+    box-shadow: 0 10px 28px rgba(36,59,85,.28);
   }
-  .total .label { font-size: 15px; font-weight: 600; color: var(--muted); }
-  .total .amount { font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums; }
+  .total .label { font-size: 15px; font-weight: 600; color: var(--sky); }
+  .total .amount { font-size: 28px; font-weight: 700; font-variant-numeric: tabular-nums; letter-spacing: .01em; }
 
   /* Phones: two-line item cards with visible field labels instead of a header row */
   @media (max-width: 640px) {
@@ -131,12 +158,14 @@
 </head>
 <body>
 
-<div class="wrap">
-  <div class="top">
+<header class="bar">
+  <div class="inner">
     <h1>Estimator</h1>
     <button class="clear" type="button" onclick="clearAll()">Clear</button>
   </div>
+</header>
 
+<div class="wrap">
   <div class="card">
     <div class="head">
       <div>Item</div>
@@ -149,7 +178,7 @@
     <button class="add" type="button" onclick="addItem(true)">+ Add item</button>
   </div>
 
-  <div class="card total">
+  <div class="total">
     <div class="label">Total</div>
     <div class="amount" id="total">$0.00</div>
   </div>
