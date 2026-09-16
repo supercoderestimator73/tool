@@ -1,130 +1,244 @@
 <!doctype html>
-<html>
+<html lang="en">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Tool</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Estimator</title>
+<meta name="theme-color" content="#1e293b">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Estimator">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <style>
-  body { font-family: Arial, sans-serif; margin: 20px; max-width: 900px; }
-  h1 { font-size: 18px; margin: 0 0 10px; }
-  input, select, button { padding: 10px; font-size: 16px; margin: 4px 0; }
-  button { cursor:pointer; }
-  .card { border:1px solid #ddd; border-radius:8px; padding:12px; margin-top:15px; }
-  .row { display:grid; grid-template-columns: 1fr 120px 80px 140px; gap:8px; margin-bottom:8px; }
-  .totals { display:flex; justify-content:space-between; font-size:18px; font-weight:bold; }
-  .hidden { display:none; }
-  .center { text-align:center; margin-top:100px; }
-  .muted { color:#666; font-size: 13px; }
+  :root {
+    --bg: #f3f4f6;
+    --card: #ffffff;
+    --line: #d8dce2;
+    --text: #1c2230;
+    --muted: #6b7280;
+    --accent: #1e293b;
+    --danger: #b42318;
+    color-scheme: light;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .wrap {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 16px 16px calc(24px + env(safe-area-inset-bottom));
+  }
+  .top { display: flex; align-items: center; justify-content: space-between; margin: 4px 0 14px; }
+  h1 { font-size: 20px; margin: 0; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px; }
+
+  /* 16px minimum keeps iOS Safari from zooming into fields on focus */
+  input, select, button { font: inherit; font-size: 16px; color: var(--text); }
+  input, select {
+    width: 100%;
+    min-width: 0;
+    height: 44px;
+    padding: 0 12px;
+    border: 1px solid var(--line);
+    border-radius: 8px;
+    background: #fff;
+  }
+  input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: transparent; }
+  select {
+    appearance: none;
+    -webkit-appearance: none;
+    padding-right: 32px;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%236b7280' stroke-width='1.8'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+  }
+
+  .head, .row {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 120px 80px 150px 44px;
+    gap: 8px;
+    align-items: center;
+  }
+  .head { font-size: 13px; font-weight: 600; color: var(--muted); padding: 0 12px 8px; }
+  .row { padding: 10px 0; }
+  #items .row + .row { border-top: 1px solid var(--line); }
+  .field { min-width: 0; }
+  .field label { display: none; }
+
+  .remove {
+    width: 44px; height: 44px;
+    border: 0; border-radius: 8px;
+    background: transparent;
+    color: var(--muted);
+    font-size: 24px; line-height: 1;
+    cursor: pointer;
+  }
+  .remove:hover, .remove:focus-visible { background: #f1f3f5; color: var(--danger); outline: none; }
+
+  .add, .clear { cursor: pointer; }
+  .add {
+    width: 100%; margin-top: 10px; height: 44px;
+    border: 1px dashed var(--line); border-radius: 8px;
+    background: #fff; color: var(--accent); font-weight: 600;
+  }
+  .add:hover, .add:focus-visible { border-color: var(--accent); outline: none; }
+  .clear {
+    border: 0; background: transparent; color: var(--muted);
+    padding: 8px 4px; font-size: 15px;
+  }
+  .clear:hover, .clear:focus-visible { color: var(--danger); outline: none; }
+
+  .total {
+    position: sticky;
+    bottom: 0;
+    margin-top: 14px;
+    display: flex; justify-content: space-between; align-items: baseline;
+    padding-bottom: calc(12px + env(safe-area-inset-bottom));
+    box-shadow: 0 -6px 16px -12px rgba(0,0,0,.35);
+  }
+  .total .label { font-size: 15px; font-weight: 600; color: var(--muted); }
+  .total .amount { font-size: 26px; font-weight: 700; font-variant-numeric: tabular-nums; }
+
+  /* Phones: two-line item cards with visible field labels instead of a header row */
+  @media (max-width: 640px) {
+    .head { display: none; }
+    .row {
+      grid-template-columns: minmax(0, 1fr) 76px minmax(0, 1fr) 44px;
+      grid-template-areas:
+        "item item item remove"
+        "cost qty  type type";
+      row-gap: 10px;
+      align-items: end;
+    }
+    .f-item { grid-area: item; }
+    .f-cost { grid-area: cost; }
+    .f-qty  { grid-area: qty; }
+    .f-type { grid-area: type; }
+    .remove { grid-area: remove; }
+    .field label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 4px; }
+    .row { padding: 14px 0; }
+  }
 </style>
 </head>
 <body>
 
-<div id="gate" class="center">
-  <h1>Access</h1>
-  <input type="password" id="pw" placeholder="Password" autocomplete="current-password">
-  <br>
-  <button onclick="enter()">Enter</button>
-  <div class="muted" style="margin-top:10px;"> </div>
-</div>
+<div class="wrap">
+  <div class="top">
+    <h1>Estimator</h1>
+    <button class="clear" type="button" onclick="clearAll()">Clear</button>
+  </div>
 
-<div id="app" class="hidden">
-  <h1>Tool</h1>
   <div class="card">
-    <div class="row" style="font-weight:bold;">
+    <div class="head">
       <div>Item</div>
       <div>Cost</div>
       <div>Qty</div>
       <div>Type</div>
+      <div></div>
     </div>
     <div id="items"></div>
-    <button onclick="addItem()">+ Add</button>
+    <button class="add" type="button" onclick="addItem(true)">+ Add item</button>
   </div>
 
-  <div class="card">
-    <div class="totals">
-      <div>Total</div>
-      <div id="total">$0.00</div>
-    </div>
+  <div class="card total">
+    <div class="label">Total</div>
+    <div class="amount" id="total">$0.00</div>
   </div>
 </div>
 
 <script>
-  // tool
-  const PASSWORD = "tool";
-
-  // Rate tables (generic)
   const RATES = {
     Materials: [
-      { min:0, max:100, markup:1.22 },
-      { min:100.01, max:500, markup:0.82 },
-      { min:500.01, max:5000, markup:0.67 },
-      { min:5000.01, max:Infinity, markup:0.55 }
+      { min: 0, max: 100, markup: 1.22 },
+      { min: 100.01, max: 500, markup: 0.82 },
+      { min: 500.01, max: 5000, markup: 0.67 },
+      { min: 5000.01, max: Infinity, markup: 0.55 }
     ],
     Equipment: [
-      { min:0, max:10000, markup:0.60 },
-      { min:10000.01, max:50000, markup:0.55 },
-      { min:50000.01, max:Infinity, markup:0.50 }
+      { min: 0, max: 10000, markup: 0.60 },
+      { min: 10000.01, max: 50000, markup: 0.55 },
+      { min: 50000.01, max: Infinity, markup: 0.50 }
     ],
     Other: [
-      { min:0, max:Infinity, markup:0.55 }
+      { min: 0, max: Infinity, markup: 0.55 }
     ]
   };
 
-  function enter(){
-    if(document.getElementById('pw').value === PASSWORD){
-      document.getElementById('gate').classList.add('hidden');
-      document.getElementById('app').classList.remove('hidden');
-    } else {
-      alert("Incorrect password");
-    }
-  }
-
-  function getTier(type, cost){
+  function getTier(type, cost) {
     const tiers = RATES[type] || RATES.Materials;
     return tiers.find(t => cost >= t.min && cost <= t.max) || tiers[0];
   }
 
-  function fmt(n){
-    return new Intl.NumberFormat('en-US',{style:'currency',currency:'USD'}).format(n || 0);
+  function fmt(n) {
+    return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'USD' }).format(n || 0);
   }
 
-  function addItem(){
+  // Accepts "1,250" or "$1,250.00" as well as plain numbers
+  function num(v) {
+    return parseFloat(String(v).replace(/[^0-9.\-]/g, ''));
+  }
+
+  function addItem(focus) {
     const row = document.createElement('div');
-    row.className='row';
+    row.className = 'row';
     row.innerHTML = `
-      <input placeholder="Item">
-      <input placeholder="0.00" inputmode="decimal">
-      <input value="1" inputmode="numeric">
-      <select>
-        <option>Materials</option>
-        <option>Equipment</option>
-        <option>Other</option>
-      </select>
+      <div class="field f-item"><label>Item</label><input placeholder="Item" autocomplete="off" enterkeyhint="next"></div>
+      <div class="field f-cost"><label>Cost</label><input placeholder="0.00" inputmode="decimal" autocomplete="off" enterkeyhint="next"></div>
+      <div class="field f-qty"><label>Qty</label><input value="1" inputmode="numeric" autocomplete="off" enterkeyhint="done"></div>
+      <div class="field f-type"><label>Type</label>
+        <select>
+          <option>Materials</option>
+          <option>Equipment</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <button class="remove" type="button" aria-label="Remove item" title="Remove">&times;</button>
     `;
-    row.querySelectorAll('input,select').forEach(x => x.addEventListener('input',recalc));
+    row.querySelectorAll('input,select').forEach(x => {
+      x.addEventListener('input', recalc);
+      x.addEventListener('change', recalc);
+    });
+    row.querySelector('.remove').addEventListener('click', () => {
+      row.remove();
+      if (!document.querySelector('#items .row')) addItem(false);
+      recalc();
+    });
     document.getElementById('items').appendChild(row);
+    if (focus) row.querySelector('.f-item input').focus();
     recalc();
   }
 
-  function recalc(){
-    let total = 0;
-    document.querySelectorAll('#items .row').forEach(row=>{
-      const cost = parseFloat(row.children[1].value) || 0;
-      const qty = parseFloat(row.children[2].value) || 1;
-      const type = row.children[3].value;
-
-      const tier = getTier(type, cost);
-      const sell = cost * (1 + tier.markup);
-      total += sell * qty;
-    });
-    document.getElementById('total').innerText = fmt(total);
+  function clearAll() {
+    document.getElementById('items').innerHTML = '';
+    addItem(false);
+    addItem(false);
+    window.scrollTo(0, 0);
   }
 
-  addItem();
-  addItem();
+  function recalc() {
+    let total = 0;
+    document.querySelectorAll('#items .row').forEach(row => {
+      const cost = num(row.querySelector('.f-cost input').value) || 0;
+      const qty  = num(row.querySelector('.f-qty input').value) || 1;
+      const type = row.querySelector('.f-type select').value;
+      const tier = getTier(type, cost);
+      total += cost * (1 + tier.markup) * qty;
+    });
+    document.getElementById('total').textContent = fmt(total);
+  }
+
+  addItem(false);
+  addItem(false);
 </script>
 
 </body>
 </html>
-
-
